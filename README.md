@@ -153,4 +153,4 @@ MIT — use, modify, and build on it freely.
 
 ## ✨ Credits
 
-Made with ☕ by Rohit(https://github.com/rohicod3)
+Made with ❤️ by Rohit(https://github.com/rohicod3)
