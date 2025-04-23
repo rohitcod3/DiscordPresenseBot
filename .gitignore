@@ -1,0 +1,29 @@
+# === Node Modules ===
+node_modules/
+
+# === Env Files ===
+.env
+.env.local
+.env.*.local
+
+# === TypeScript Output ===
+dist/
+build/
+*.tsbuildinfo
+
+# === Logs ===
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# === OS Files ===
+.DS_Store
+Thumbs.db
+
+# === IDE Specific ===
+.vscode/
+.idea/
+
+# === Misc ===
+*.log
