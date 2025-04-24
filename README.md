@@ -1,59 +1,76 @@
-# 🎧 Discord Presence + Spotify Bot
+# 🎵 Discord Presence + Spotify Bot
 
-A lightweight TypeScript Discord bot that listens for **real-time user presence** and **Spotify activity** — and stores everything in **Upstash Redis**.
+A lightweight TypeScript Discord bot that listens for **real-time user presence** and **Spotify activity**, and stores everything in **Upstash Redis**. It’s also built with an **Express server** to expose a health check route, and stays alive 24/7 on **Render** using a **cron ping system**.
 
-Use it to build dashboards, display who's listening to what, or just track your own online status and music taste in your apps.
+This bot is a fully-deployed backend system that not only shows your current status and now-playing track on Discord, but also integrates with your portfolio or dashboard through Redis-backed APIs. It handles real-time events, edge cases like platform sleep, and demonstrates strong backend engineering practices.
+
+---
+
+## 🔧 What the Bot Does
+
+- Connects to Discord using `discord.js` and listens to `presenceUpdate` events.
+- Parses user presence and Spotify activity (track, artist, album, album art, etc).
+- Stores user activity in Upstash Redis using hash-based structure for real-time fetch.
+- Prevents Render's free-tier timeout by hosting an Express server with a `GET /` health route.
+- Keeps itself alive using external ping services like `cron-job.org` or `UptimeRobot`.
+
+---
+
+## 💥 Problem We Faced
+
+### ❌ Issue:
+Render's free tier **sleeps inactive web services** after ~15 minutes of no incoming traffic.
+
+### ✅ Our Solution:
+- We created an Express server alongside the Discord bot.
+- It exposes a `GET /` route with a simple `res.send()` message.
+- We set up a ping job from `cron-job.org` to hit the route every 5 minutes.
+- This activity keeps the bot online and continuously synced with Discord.
 
 ---
 
 ## 🚀 Features
 
-✅ Tracks user presence (online, idle, dnd, offline)  
-🎵 Detects and logs Spotify songs being played  
-📦 Saves data to Upstash Redis in real-time  
-⚡ Runs on ts-node — no build step required  
-🧠 Perfect for dashboards, activity feeds, and status syncing
+- ✅ Tracks Discord user presence (online, idle, dnd, offline)
+- 🎵 Detects and logs Spotify songs being played in real-time
+- 📦 Stores activity in Upstash Redis (serverless & fast)
+- 🌐 Hosts a lightweight health route using Express
+- 🔁 Avoids Render auto-sleep via scheduled pings
 
 ---
 
-## 🧰 Tech Stack
+## 🛠 Tech Stack
 
-- **discord.js** — connects to the Discord Gateway
-- **@upstash/redis** — fast, serverless Redis storage
-- **dotenv** — manages secrets and tokens
-- **ts-node** — runs TypeScript directly without compiling
+- `discord.js` — Discord API wrapper
+- `@upstash/redis` — serverless Redis
+- `express` — for health check endpoint
+- `dotenv` — env variable management
+- `ts-node` — run TypeScript directly in Node
 
 ---
 
-## 📁 Project Structure
+## 🗂 Project Structure
 
 ```
 discord-presence-bot/
-├── discordBot.ts          # Main bot code
-├── .env                   # Your secrets (not committed)
-├── tsconfig.bot.json      # TS config for bot
-├── package.json           # Dependencies + start script
+├── discordBot.ts          # Main bot logic + Express health server
+├── .env                   # Environment variables (not committed)
+├── tsconfig.bot.json      # TypeScript config
+├── package.json           # Dependencies + scripts
 ├── .gitignore             # Ignores node_modules, env, dist
 ```
 
 ---
 
-## ⚙️ Setup Instructions
-
-### 1. Clone the repo
+## ⚙️ Setup & Installation
 
 ```bash
 git clone https://github.com/YOUR_USERNAME/discord-presence-bot.git
 cd discord-presence-bot
-```
-
-### 2. Install dependencies
-
-```bash
 npm install
 ```
 
-### 3. Create your `.env` file
+Create your `.env` file:
 
 ```env
 BOT_TOKEN=your_discord_bot_token
@@ -61,55 +78,49 @@ UPSTASH_REDIS_REST_URL=https://your-upstash-url.upstash.io
 UPSTASH_REDIS_REST_TOKEN=your_upstash_token
 ```
 
-### 4. Enable Gateway Intents (IMPORTANT)
+Enable required Gateway Intents in Discord Developer Portal:
+- Presence Intent ✅
+- Server Members Intent ✅
 
-In [Discord Developer Portal](https://discord.com/developers/applications):
-
-- Go to your bot → **Bot** tab
-- Enable:
-  - ✅ Presence Intent
-  - ✅ Server Members Intent
-
----
-
-## 🤖 Invite Your Bot to a Server
-
-Go to **OAuth2 > URL Generator** in the Developer Portal:
-
-- **Scopes**: `bot`
-- **Bot Permissions**:
-  - View Channels
-  - Read Message History
-  - Presence
-
-Copy the generated URL and invite your bot.
-
----
-
-## ▶️ Run the Bot
+Run the bot:
 
 ```bash
 npm run dev
 ```
 
-You'll see:
-
+Console Output:
 ```
 ✅ Logged in as YourBot#1234
+🌐 Health check server running on port 3000
 [BOT ALIVE] 7:12:10 PM
 ```
 
-Now your Redis DB will start storing updates in real-time.
+---
+
+## 🌐 Health Check Express Server
+
+```ts
+const express = require('express');
+const app = express();
+
+app.get('/', (req, res) => {
+  res.send('✅ Bot is alive');
+});
+
+app.listen(3000, () => console.log("Health check server running"));
+```
+
+Ping this route every few minutes to prevent Render from sleeping your bot.
 
 ---
 
-## 📊 Redis Data Format
+## 📊 Redis Data Structure
 
-All user presence is stored under the Redis key: `discord:presence`
+Data is stored in Redis under the key `discord:presence`:
 
 ```json
 {
-  "123456789012345678": {
+  "418810606880161802": {
     "username": "rohit",
     "status": "online",
     "spotify": {
@@ -125,23 +136,23 @@ All user presence is stored under the Redis key: `discord:presence`
 
 ---
 
-## 💡 What You Can Build With This
+## 📡 Keep It Alive (Recommended Setup)
 
-- Personal dashboard showing your live status + music
-- Real-time "Now Playing" widget
-- Multi-user activity board
-- Presence analytics over time
+### Cron Ping with `cron-job.org`:
+- Create a new HTTP job
+- URL: `https://your-bot.onrender.com/`
+- Interval: Every 5 minutes
+- Method: GET
+
+This keeps your bot alive on free-tier hosts like Render.
 
 ---
 
-## 🚀 Deploy Options
+## 💡 Real Use Case Ideas
 
-| Platform   | Status |
-|------------|--------|
-| Railway    | ✅ Easy, 1-click deploy |
-| Render.com | ✅ Works with `npm run dev` |
-| VPS (pm2)  | ✅ Run with `pm2 start npm --name bot -- run dev` |
-| Replit     | ✅ Paste + run with .env secrets |
+- Show live Discord presence & music on your portfolio site
+- Real-time dashboards for team activity
+- Analytics tools for presence/time tracking
 
 ---
 
@@ -153,4 +164,5 @@ MIT — use, modify, and build on it freely.
 
 ## ✨ Credits
 
-Made with ❤️ by Rohit(https://github.com/rohicod3)
+Built with ❤️ by [Rohit](https://github.com/rohitcod3)
+
